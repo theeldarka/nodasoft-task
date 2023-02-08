@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
-	"sync"
 	"time"
 )
 
-const TasksCount = 5
+const TasksCount = 15
 
 type Task struct {
 	id          int
@@ -86,19 +85,19 @@ func main() {
 		close(taskQueue)
 	}()
 
-	var wg sync.WaitGroup
-	wg.Add(2)
+	//var wg sync.WaitGroup
+	//wg.Add(2)
 
-	go printSuccessfulTasks(successfulTasks, &wg)
-	go printFailedTasks(failedTasks, &wg)
+	go printSuccessfulTasks(successfulTasks /*, &wg*/)
+	go printFailedTasks(failedTasks /*, &wg*/)
 
-	wg.Wait()
+	//wg.Wait()
 
-	//time.Sleep(time.Second * 1)
+	time.Sleep(time.Second * 3) // I'm going to replace this with wait groups
 }
 
-func printSuccessfulTasks(tasks chan Task, wg *sync.WaitGroup) {
-	defer wg.Done()
+func printSuccessfulTasks(tasks chan Task /*, wg *sync.WaitGroup*/) {
+	//defer wg.Done()
 
 	for t := range tasks {
 		fmt.Printf("task #%d completed at %s\n", t.id, t.completedAt.Format(time.RFC3339))
@@ -107,8 +106,8 @@ func printSuccessfulTasks(tasks chan Task, wg *sync.WaitGroup) {
 	close(tasks)
 }
 
-func printFailedTasks(tasks chan Task, wg *sync.WaitGroup) {
-	defer wg.Done()
+func printFailedTasks(tasks chan Task /*, wg *sync.WaitGroup*/) {
+	//defer wg.Done()
 
 	for t := range tasks {
 		fmt.Printf(
