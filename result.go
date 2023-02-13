@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"time"
 )
 
-const TasksCount = 15
+const TasksCount = 15 // you can edit this
 
 type Task struct {
-	id          int
+	id          uint32
 	createdAt   time.Time
 	completedAt time.Time
 	success     bool
@@ -42,21 +43,22 @@ func seedTasks(c chan<- Task, count int) {
 
 func generateTask() Task {
 	now := time.Now()
+	id := uuid.New().ID()
 
 	createdAt := now
-	if shouldAddIncorrectTask(now) {
+	if shouldAddIncorrectTask(id) {
 		createdAt = time.Time{}
 	}
 
 	time.Sleep(time.Millisecond * 10) // to avoid duplicate ids
 
-	return Task{createdAt: createdAt, id: int(now.UnixMicro())}
+	return Task{createdAt: createdAt, id: id}
 }
 
-func shouldAddIncorrectTask(t time.Time) bool {
+func shouldAddIncorrectTask(id uint32) bool {
 	// Original code was t.Nanosecond()%2 > 0, but chance was very small
 
-	return t.Nanosecond()/1000%2 > 0 // 50% chance
+	return id%2 > 0
 }
 
 func main() {
@@ -77,9 +79,11 @@ func main() {
 
 	go func() {
 		for t := range taskQueue {
-			t = t.Run()
+			go func(t Task) {
+				t = t.Run()
 
-			go sortCompletedTask(t)
+				sortCompletedTask(t)
+			}(t)
 		}
 
 		close(taskQueue)
@@ -93,7 +97,7 @@ func main() {
 
 	//wg.Wait()
 
-	time.Sleep(time.Second * 3) // I'm going to replace this with wait groups
+	time.Sleep(time.Second * 1) // I'm going to replace this with wait groups
 }
 
 func printSuccessfulTasks(tasks chan Task /*, wg *sync.WaitGroup*/) {
